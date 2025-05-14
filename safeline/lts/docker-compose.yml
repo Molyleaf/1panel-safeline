@@ -123,3 +123,7 @@ services:
       - ${SAFELINE_DIR}/resources/chaos:/app/chaos
     networks: 
       - 1panel-network
+
+networks:  
+  1panel-network:  
+    external: true
