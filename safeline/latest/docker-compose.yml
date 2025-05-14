@@ -9,10 +9,8 @@ services:
     environment:
       - POSTGRES_USER=safeline-ce
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?postgres password required}
-    env_file: # 新增部分
-      - 1panel.env # 新增部分
-    networks:
-      1panel-network
+    networks: 
+      - 1panel-network
     command: [postgres, -c, max_connections=600]
     healthcheck:
       test: pg_isready -U safeline-ce -d safeline-ce
@@ -32,8 +30,6 @@ services:
       test: curl -k -f https://localhost:1443/api/open/health
     environment:
       - MGT_PG=postgres://safeline-ce:${POSTGRES_PASSWORD}@safeline-pg/safeline-ce?sslmode=disable
-    env_file: # 新增部分
-      - 1panel.env # 新增部分
     depends_on:
       - postgres
       - fvm
@@ -42,8 +38,8 @@ services:
       options:
         max-size: "100m"
         max-file: "5"
-    networks:
-      1panel-network
+    networks: 
+      - 1panel-network
   detect:
     container_name: safeline-detector
     restart: always
@@ -54,10 +50,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
     environment:
       - LOG_DIR=/logs/detector
-    env_file: # 新增部分
-      - 1panel.env # 新增部分
-    networks:
-      1panel-network
+    networks: 
+      - 1panel-network
   tengine:
     container_name: safeline-tengine
     restart: always
@@ -72,13 +66,11 @@ services:
       - ${SAFELINE_DIR}/resources/cache:/usr/local/nginx/cache
       - ${SAFELINE_DIR}/resources/sock:/app/sock
     environment:
-      - TCD_MGT_API=https://${SUBNET_PREFIX}.4:1443/api/open/publish/server
-      - TCD_SNSERVER=${SUBNET_PREFIX}.5:8000
+      - TCD_MGT_API=https://safeline-mgt:1443/api/open/publish/server
+      - TCD_SNSERVER=safeline-detect:8000
       # deprecated
-      - SNSERVER_ADDR=${SUBNET_PREFIX}.5:8000
-      - CHAOS_ADDR=${SUBNET_PREFIX}.10
-    env_file: # 新增部分
-      - 1panel.env # 新增部分
+      - SNSERVER_ADDR=safeline-detect:8000
+      - CHAOS_ADDR=safeline-chaos
     ulimits:
       nofile: 131072
     network_mode: host
@@ -87,10 +79,8 @@ services:
     restart: always
     image: ${IMAGE_PREFIX}/safeline-luigi${REGION}${ARCH_SUFFIX}:${IMAGE_TAG}
     environment:
-      - MGT_IP=${SUBNET_PREFIX}.4
+      - MGT_IP=safeline-mgt
       - LUIGI_PG=postgres://safeline-ce:${POSTGRES_PASSWORD}@safeline-pg/safeline-ce?sslmode=disable
-    env_file: # 新增部分
-      - 1panel.env # 新增部分
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${SAFELINE_DIR}/resources/luigi:/app/data
@@ -102,26 +92,21 @@ services:
     depends_on:
       - detect
       - mgt
-    networks:
-      1panel-network
+    networks: 
+      - 1panel-network
   fvm:
     container_name: safeline-fvm
     restart: always
     image: ${IMAGE_PREFIX}/safeline-fvm${REGION}${ARCH_SUFFIX}:${IMAGE_TAG}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-    # 注意: fvm 服务在原始文件中没有 environment 块。
-    # 如果 fvm 服务也需要从 1panel.env 中读取环境变量，
-    # 请取消注释下面的 env_file 部分。
-    env_file:
-       - 1panel.env
     logging:
       driver: "json-file"
       options:
         max-size: "100m"
         max-file: "5"
-    networks:
-      1panel-network
+    networks: 
+      - 1panel-network
   chaos:
     container_name: safeline-chaos
     restart: always
@@ -133,10 +118,8 @@ services:
         max-file: "10"
     environment:
       - DB_ADDR=postgres://safeline-ce:${POSTGRES_PASSWORD}@safeline-pg/safeline-ce?sslmode=disable
-    env_file: # 新增部分
-      - 1panel.env # 新增部分
     volumes:
       - ${SAFELINE_DIR}/resources/sock:/app/sock
       - ${SAFELINE_DIR}/resources/chaos:/app/chaos
-    networks:
-      1panel-network
+    networks: 
+      - 1panel-network
