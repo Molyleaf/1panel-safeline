@@ -30,13 +30,6 @@ additionalProperties:
       labelZh: 1panel-network 子网前缀 (查看docker网络获取)
       required: true
       type: text
-    - default:
-      edit: true
-      envKey: RELEASE
-      labelEn: RELEASE
-      labelZh: RELEASE
-      required: true
-      type: text
     - default: latest
       edit: true
       envKey: IMAGE_TAG
